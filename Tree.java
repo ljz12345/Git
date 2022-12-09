@@ -13,7 +13,7 @@ class Tree implements Serializable {
 
 
     /**---------------方法域------------------*/
-    public Tree() {   //构造函数
+    public Tree() {   //构造方法
         map = new HashMap<>();
         //System.out.println(map.get(filename));
     }
