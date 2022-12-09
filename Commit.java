@@ -7,17 +7,17 @@ class Commit implements Serializable {
     /**---------------数据域------------------*/
     private static final long serialVersionUID = 3L;
 
-    private String type = "Commit";  //标明这个对象是Tree类型
+    private String type = "Commit";  //标明这个对象是Commit类型
 
     private String lastCmt = "";  
 
     private String id;  //保存文件名，便于id被HEAD取用
 
-    private String TreeId;  //保存此次生成的tree的id
+    private String TreeId;  //保存此次commit生成的tree的id
 
-    private String cmtTime;  
+    private String cmtTime;  //保存此次commit的时间
 
-    private String Message;  
+    private String Message;  //保存commit的message
 
     private HashMap<String, String> map;
 
