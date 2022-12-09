@@ -17,7 +17,7 @@ public class Index implements Serializable {
     }
 
 
-    //构造函数：初始化Index对象时，要初始化一个哈希表
+    //构造方法：初始化Index对象时，要初始化一个哈希表
     public Index() {
         map = new HashMap<>();
         //System.out.println(map.get(filename));
