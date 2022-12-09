@@ -38,8 +38,7 @@ public class mygit {
             } else {
                 remove(args[1], 1);
             }
-
-            //log部分结束
+            //rm部分结束
         } else {
             System.out.println("还不支持该命令");
         }
@@ -292,16 +291,4 @@ public class mygit {
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
