@@ -9,20 +9,20 @@ class Commit implements Serializable {
 
     private String type = "Commit";  //标明这个对象是Tree类型
 
-    private String lastCmt = "";  //标明这个对象是Tree类型
+    private String lastCmt = "";  
 
     private String id;  //保存文件名，便于id被HEAD取用
 
     private String TreeId;  //保存此次生成的tree的id
 
-    private String cmtTime;  //保存此次生成的tree的id
+    private String cmtTime;  
 
-    private String Message;  //保存此次生成的tree的id
+    private String Message;  
 
     private HashMap<String, String> map;
 
     /**---------------方法域------------------*/
-    public Commit() {   //构造函数
+    public Commit() {   //构造方法
         map = new HashMap<>();
         //System.out.println(map.get(filename));
     }
