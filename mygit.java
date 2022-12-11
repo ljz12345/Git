@@ -17,9 +17,12 @@ public class mygit {
             //init部分结束
         } else if(args[0].equals("add")){
             if(args[1].equals(".")){
-                add_all();
+                add_all("");
+                Index.OutPrintMap();
+                Index.dltIdx();    //检查暂存区文件是否已从工作区区删除，若是，则相应地删除暂存区条目
             } else {
                 add(args[1],1);
+                Index.OutPrintMap();
             }
             //add部分结束
         } else if(args[0].equals("commit")){
@@ -39,6 +42,11 @@ public class mygit {
                 remove(args[1], 1);
             }
             //rm部分结束
+        } else if(args[0].equals("push")){
+            Client.push();
+            //push部分结束
+        } else if(args[0].equals("index")){    //并非正式命令，专用于检查、debug
+            Index.OutPrintMap();
         } else {
             System.out.println("还不支持该命令");
         }
@@ -81,7 +89,7 @@ public class mygit {
 
 
     public static void add(String filename, int option) throws Exception {
-        System.out.println("----对" + filename + "文件执行add操作----");
+        System.out.print("----对 " + filename + " 文件执行add操作----");
         File f1 = new File(filename);
         //从暂存区中删除不存在于工作区的文件
         if(option == 1){  //option == 1 代表命令行输入的不是add. 而是add [文件名]
@@ -118,23 +126,34 @@ public class mygit {
             Blob.writeBlob(content,hash);
 
         }
+        System.out.println("操作完成!");
+
         Index.updateIdx(filename, hash);  //修改index文件内容
     }
 
-    public static void add_all() throws Exception {
+
+    public static void add_all(String relativePath) throws Exception {
         String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
-        File dir = new File(property);
+        File dir = new File(property + File.separator + relativePath);
         File[] files = dir.listFiles();
-        //对所有文件执行add操作
-        for(File f:files){   //遍历工作区目录下的文件
+        for(File f:files){   //遍历工作区目录下的文件和文件夹
+            String name = f.getName();   //获取文件名
             if(f.isFile()){  //如果不是文件夹
-                String name = f.getName();   //获取文件名
-                add(name,0);    //option == 0 代表命令行输入的是add [.] ，需要判断index每个键值是否存在于工作区
+                if(relativePath.equals("")){    //在根文件夹的时候，相对路径为空串，add方法不需要加相对路径
+                    add(name,0);    //option == 0 代表命令行输入的是add [.] ，需要判断index每个键值是否存在于工作区
+                } else {    //在子文件夹的时候
+                    add(relativePath + File.separator + name,0);
+                }
+            } else if (f.isDirectory() && !name.equals(".git")) {
+                //System.out.println(name + "是子文件夹");
+                //System.out.println("子文件夹路径为: " + property + File.separator + name);
+                if(relativePath.equals("")){    //在根文件夹的时候，相对路径为空串，传递参数时不需要加上一次的相对路径
+                    add_all(name);    //递归操作：子文件夹的名字成为相对路径传入下一个add_all()，深度优先遍历所有文件和文件夹
+                } else {    //在子文件夹的时候
+                    add_all(relativePath + File.separator + name);
+                }
             }
         }
-
-        Index.dltIdx();
-
     }
 
     public static void commit(String msg) throws Exception {
@@ -291,4 +310,16 @@ public class mygit {
 
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

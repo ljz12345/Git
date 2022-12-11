@@ -4,25 +4,25 @@ import java.util.Date;
 import java.util.HashMap;
 
 class Commit implements Serializable {
-    /**---------------数据域------------------*/
     private static final long serialVersionUID = 3L;
 
     private String type = "Commit";  //标明这个对象是Commit类型
 
-    private String lastCmt = "";  
+    private String lastCmt = "";
 
     private String id;  //保存文件名，便于id被HEAD取用
 
     private String TreeId;  //保存此次commit生成的tree的id
 
-    private String cmtTime;  //保存此次commit的时间
+    private String cmtTime;  //保存此次commit的提交时间
 
-    private String Message;  //保存commit的message
+    private String Message;  //保存此次commit的信息备注
 
     private HashMap<String, String> map;
 
-    /**---------------方法域------------------*/
-    public Commit() {   //构造方法
+
+
+    public Commit() {   //构造函数
         map = new HashMap<>();
         //System.out.println(map.get(filename));
     }

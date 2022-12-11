@@ -3,12 +3,9 @@ import java.util.HashMap;
 import java.util.Stack;
 
 public class HEAD implements Serializable {
-    /**---------------数据域------------------*/
     private static final long serialVersionUID = 3L;
     private String cmtId = "";
 
-
-    /**---------------方法域------------------*/
     public String getCmtId() {
         return cmtId;
     }
