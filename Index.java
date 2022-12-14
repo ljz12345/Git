@@ -1,14 +1,13 @@
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class Index implements Serializable {
     private static final long serialVersionUID = 1L;  //序列号，用于序列化与反序列化
 
     private String type = "Index";  //标明这个对象是Index类型
     private HashMap<String, String> map;
+
+    private HashSet<String> treeSet;
 
 
 
@@ -21,11 +20,18 @@ public class Index implements Serializable {
     //构造方法：初始化Index对象时，要初始化一个哈希表
     public Index() {
         map = new HashMap<>();
+        treeSet = new HashSet<>();
+
         //System.out.println(map.get(filename));
     }
 
     private void addIdx(String filename, String hash) {  //添加一个映射进入哈希表
         map.put(filename,hash);
+        //System.out.println(map.get(filename));
+    }
+
+    private void addTreeSet(String dir_name) {  //添加一个映射进入哈希集合
+        treeSet.add(dir_name);
         //System.out.println(map.get(filename));
     }
 
@@ -51,10 +57,21 @@ public class Index implements Serializable {
         String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
         File index_dir = new File(property + "/.git/objects/index");
         try{
+            //打开文件
             FileInputStream fis = new FileInputStream(index_dir);    //用文件输入流，打开index_dir这个文件
             ObjectInputStream ois = new ObjectInputStream(fis);    //新建对象输入流，准备读取index_dir文件中的对象
             Index index =(Index)ois.readObject();    //读取index文件中原有的内容，也就是把index反序列化出来
 
+            //遍历打印哈希集合中的元素
+            System.out.println("现在的index哈希集合是：");
+            System.out.printf("%-60s\n", "DIRECTORY NAME");
+            String[] treeArr = index.treeSet.toArray(new String[index.treeSet.size()]);
+            Arrays.sort(treeArr);
+            for(String dirName : treeArr) {
+                String hash = index.map.get(dirName);
+                System.out.printf("%-60s\n", dirName);
+            }
+            System.out.println("暂存区的文件夹数量为：" + index.treeSet.size() + "个\n");
 
             //遍历打印哈希表中的元素
             System.out.println("现在的index哈希表是：");
@@ -70,7 +87,6 @@ public class Index implements Serializable {
 
             fis.close();
             ois.close();
-
         } catch(FileNotFoundException e) {
             System.out.println("index文件不存在");
         } catch(ClassNotFoundException e) {
@@ -83,7 +99,7 @@ public class Index implements Serializable {
 
 
 
-    public static void updateIdx(String filename, String hash) throws Exception{
+    public static void updatefIdx(String filename, String hash) throws Exception{
         String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
         File index_dir = new File(property + "/.git/objects/index");
 
@@ -113,6 +129,58 @@ public class Index implements Serializable {
 
             //把新的映射加入哈希表
             index.addIdx(filename, hash);
+
+            //创建文件输出流，把index对象序列化到index文件中
+            FileOutputStream fos = new FileOutputStream(index_dir);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            //System.out.println("现在的index哈希表是：" + index.map);  //把index的哈希表打印出来
+            //System.out.println("现在的index哈希表是：");
+            //index.printMap();    //把index的哈希表打印出来
+            //System.out.println("暂存区的文件数量为：" + index.map.size() + "个\n");
+            oos.writeObject(index);
+
+            //清理缓存区
+            fos.close();
+            oos.close();
+            fis.close();
+            ois.close();
+        }
+
+    }
+
+    public static void updateDirIdx(String dir_name) throws Exception{
+        String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
+        File index_dir = new File(property + "/.git/objects/index");
+
+        //System.out.print(index_dir.length());
+
+        if(index_dir.length() == 0){  //如果Index还是个空文件，则初始化一个index对象
+            Index index = new Index();  //初始化index对象
+            System.out.println("index文件目前为空");
+            //直接把新映射写入哈希表
+            index.addTreeSet(dir_name);  //向index对象加入第一个映射
+            //System.out.println("现在的index哈希表是：");
+            //index.printMap();    //把index的哈希表打印出来
+
+            //创建文件输出流，把index对象序列化到index文件中
+            FileOutputStream fos = new FileOutputStream(index_dir);   //用文件输出流，打开index_dir这个文件
+            ObjectOutputStream oos = new ObjectOutputStream(fos);    //创建一个对象输出流，准备向上一行打开的文件写对象
+            oos.writeObject(index);
+
+            //清理缓存区
+            fos.close();
+            oos.close();
+        } else {   //如果Index文件非空，则需要先打开（反序列化），再向index对象中加入内容
+            FileInputStream fis = new FileInputStream(index_dir);    //用文件输入流，打开index_dir这个文件
+            ObjectInputStream ois = new ObjectInputStream(fis);    //新建对象输入流，准备读取index_dir文件中的对象
+            Index index =(Index)ois.readObject();    //读取index文件中原有的内容，也就是把index反序列化出来
+            //System.out.println("原本的index哈希表是：" + index.map);    //把index对象的哈希表打印出来
+
+            //把新的映射加入哈希表
+            if(index.treeSet == null){
+                index.treeSet = new HashSet<>();
+            }
+            index.addTreeSet(dir_name);
 
             //创建文件输出流，把index对象序列化到index文件中
             FileOutputStream fos = new FileOutputStream(index_dir);

@@ -89,46 +89,53 @@ public class mygit {
 
 
     public static void add(String filename, int option) throws Exception {
-        System.out.print("----对 " + filename + " 文件执行add操作----");
         File f1 = new File(filename);
-        //从暂存区中删除不存在于工作区的文件
-        if(option == 1){  //option == 1 代表命令行输入的不是add. 而是add [文件名]
-            if(!f1.exists()){
-                //System.out.println("文件 "+ filename + " 不存在于工作区");
-                Index.dltIdx(filename);
-                return;
-            }
-        }
 
-        //1. 读取被add的文件
-        FileInputStream in = new FileInputStream(filename);  //问题：输入流的括号里是File和String类型都可以吗
-        byte[] content = new byte[1024];
-        in.read(content);   //返回读取到的字节数，并且把读到的字节流放进content里
-
-        //2. 获取该文件的哈希值
-        String hash = getHashOfByteArray(content);
-
-        //3. 检查blob是否已存在，存在则无事发生，不存在则创建一个
-        // 遍历objects目录，看该文件对应的以哈希值命名的blob文件是否已经存在
-        String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
-        File obj_dir = new File(property + "/.git/objects");
-        int mark = 0;
-        File[] files = obj_dir.listFiles();
-        for(File f:files){   //遍历objects目录
-            if(f.isFile()){
-                String name = f.getName();   //获取文件名
-                if(hash.equals(name)){       //如果obj文件夹里面有文件名等于目前文件的哈希值
-                    mark += 1;
+        if(f1.isFile()){
+            System.out.print("----对 " + filename + " 文件执行add操作----");
+            //从暂存区中删除不存在于工作区的文件
+            if(option == 1){  //option == 1 代表命令行输入的不是add. 而是add [文件名]
+                if(!f1.exists()){
+                    //System.out.println("文件 "+ filename + " 不存在于工作区");
+                    Index.dltIdx(filename);
+                    return;
                 }
             }
-        }
-        if(mark == 0){    //如果obj文件夹里没有对应的blob文件，则写入一个blob
-            Blob.writeBlob(content,hash);
+            //1. 读取被add的文件
+            FileInputStream in = new FileInputStream(filename);  //问题：输入流的括号里是File和String类型都可以吗
+            byte[] content = new byte[1024];
+            in.read(content);   //返回读取到的字节数，并且把读到的字节流放进content里
 
-        }
-        System.out.println("操作完成!");
+            //2. 获取该文件的哈希值
+            String hash = getHashOfByteArray(content);
 
-        Index.updateIdx(filename, hash);  //修改index文件内容
+            //3. 检查blob是否已存在，存在则无事发生，不存在则创建一个
+            // 遍历objects目录，看该文件对应的以哈希值命名的blob文件是否已经存在
+            String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
+            File obj_dir = new File(property + "/.git/objects");
+            int mark = 0;
+            File[] files = obj_dir.listFiles();
+            for(File f:files){   //遍历objects目录
+                if(f.isFile()){
+                    String name = f.getName();   //获取文件名
+                    if(hash.equals(name)){       //如果obj文件夹里面有文件名等于目前文件的哈希值
+                        mark += 1;
+                    }
+                }
+            }
+            if(mark == 0){    //如果obj文件夹里没有对应的blob文件，则写入一个blob
+                Blob.writeBlob(content,hash);
+
+            }
+            System.out.println("操作完成!");
+
+            Index.updatefIdx(filename, hash);  //修改index文件内容
+        } else if (f1.isDirectory() && !f1.getName().equals(".git")) {
+            System.out.println("----对 " + filename + " 文件夹执行add操作----");
+            Index.updateDirIdx(f1.getName());
+            add_all(f1.getName());
+        }
+
     }
 
 
@@ -136,20 +143,28 @@ public class mygit {
         String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
         File dir = new File(property + File.separator + relativePath);
         File[] files = dir.listFiles();
-        for(File f:files){   //遍历工作区目录下的文件和文件夹
+        for(File f:files){    //遍历工作区目录下的文件和文件夹
             String name = f.getName();   //获取文件名
-            if(f.isFile()){  //如果不是文件夹
+
+            /**如果f是文件*/
+            if(f.isFile()){
                 if(relativePath.equals("")){    //在根文件夹的时候，相对路径为空串，add方法不需要加相对路径
                     add(name,0);    //option == 0 代表命令行输入的是add [.] ，需要判断index每个键值是否存在于工作区
                 } else {    //在子文件夹的时候
                     add(relativePath + File.separator + name,0);
                 }
             } else if (f.isDirectory() && !name.equals(".git")) {
+            /**如果f是文件夹*/
                 //System.out.println(name + "是子文件夹");
                 //System.out.println("子文件夹路径为: " + property + File.separator + name);
-                if(relativePath.equals("")){    //在根文件夹的时候，相对路径为空串，传递参数时不需要加上一次的相对路径
+                if(relativePath.equals("")){    //当前位置在根文件夹的时候，相对路径为空串，传递参数时不需要加上一次的相对路径
+                    System.out.println("----对 " + name + " 文件夹执行add操作----");
+                    Index.updateDirIdx(name);
                     add_all(name);    //递归操作：子文件夹的名字成为相对路径传入下一个add_all()，深度优先遍历所有文件和文件夹
-                } else {    //在子文件夹的时候
+                } else {    //当前位置在子文件夹的时候，需要传递相对路径，相对路径每次都会加上上一次的相对路径，变得越来越长
+                    //index treeSet加上relativePath + File.separator + name
+                    System.out.println("----对 " + relativePath + File.separator + name + " 文件夹执行add操作----");
+                    Index.updateDirIdx(relativePath + File.separator + name);
                     add_all(relativePath + File.separator + name);
                 }
             }
@@ -174,19 +189,19 @@ public class mygit {
         //3. 打印增删改情况
         String property = System.getProperty("user.dir"); //property便是当前所在文件夹的绝对路径
 
-        //先把上一次commit读出来
+        //(1)先把上一次commit读出来
         File LastCmt = new File(property + File.separator + "/.git/objects/" + HEAD.getLastCmt());
         FileInputStream fis = new FileInputStream(LastCmt);    //用文件输入流，打开上一次的commit文件
         ObjectInputStream ois = new ObjectInputStream(fis);    //新建对象输入流，准备读取commit文件中的对象
         Commit Lstcmt = (Commit) ois.readObject();    //读取commit文件中的commit对象
 
-        //再把上一次的Tree读出来
+        //(2)再把上一次的Tree读出来
         File LastTree = new File(property + File.separator + "/.git/objects/" + Lstcmt.getTreeId());
         FileInputStream fis1 = new FileInputStream(LastTree);    //用文件输入流，打开上一次的Tree文件
         ObjectInputStream ois1 = new ObjectInputStream(fis1);    //新建对象输入流，准备读取Tree文件中的对象
         Tree LstTree = (Tree) ois1.readObject();    //读取Tree文件中的Tree对象
 
-        //对比两次Tree的区别
+        //(3)对比两次Tree的区别
         HashMap<String, String> thismap = tree.getMap();
         HashMap<String, String> Lstmap = LstTree.getMap();
 
